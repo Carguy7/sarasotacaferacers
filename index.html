@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sarasota Caf&eacute; Racers</title>
+    <style>
+        /* --- GLOBAL STYLES --- */
+        body, html {
+            margin: 0; padding: 0;
+            font-family: "Helvetica Neue", Arial, sans-serif;
+            background-color: #f0f0f0; 
+            color: #000000;
+            height: 100%;
+            overflow-x: hidden;
+        }
+
+        /* --- INTRO PAGE --- */
+        #intro-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url('intro-bg.jpg'); 
+            background-color: #1a1a1a; 
+            background-size: cover; background-position: center;
+            z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center; transition: opacity 1s ease-out;
+        }
+
+        #intro-title-container { margin-bottom: 50px; color: white; text-shadow: 2px 2px 10px rgba(0,0,0,1); }
+        #intro-title { font-size: 5rem; font-weight: 900; text-transform: uppercase; margin: 0; letter-spacing: -1px; }
+        .intro-subtitle { font-size: 1.8rem; font-style: italic; margin-top: 5px; line-height: 1.2; display: inline-block; text-align: left; }
+        .indent-line { padding-left: 60px; display: block; }
+
+        #start-btn {
+            width: 125px; height: 125px; border-radius: 50%;
+            background-color: #cc0000; border: 7px solid silver;
+            cursor: pointer; box-shadow: 0 0 25px rgba(0,0,0,0.8);
+            color: white; font-weight: 900; font-size: 24px;
+            display: flex; justify-content: center; align-items: center;
+            transition: transform 0.1s;
+        }
+        #start-btn:active { transform: scale(0.9); }
+
+        /* --- MAIN SITE --- */
+        #main-site { display: none; opacity: 0; transition: opacity 1s ease-in; }
+        .top-banner { height: 10vh; background-image: url('banner.jpg'); background-color: #333; background-size: cover; background-position: center; }
+        
+        nav { background-color: #000000; padding: 5px 0; display: flex; flex-wrap: wrap; justify-content: center; position: sticky; top: 0; z-index: 1000; }
+        nav button { background: none; border: none; color: white; padding: 12px 15px; font-size: 13px; text-transform: uppercase; cursor: pointer; letter-spacing: 1px; }
+        nav button:hover { color: #cc0000; }
+
+        #content-area { padding: 40px 20px; max-width: 1200px; margin: 0 auto; min-height: 80vh; }
+        .page-section { display: none; animation: fadeIn 0.5s; }
+        .page-section.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        h2 { border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-bottom: 30px; text-transform: uppercase; }
+
+        /* --- LAYOUTS: SPLIT (Text/Image) & GRID (Gallery) --- */
+        .split-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; margin-bottom: 60px; align-items: start; }
+        .split-image img { width: 100%; height: auto; border: 1px solid #ccc; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        
+        .gallery-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+        .gallery-item { cursor: pointer; text-align: center; }
+        .gallery-item img { 
+            width: 100%; 
+            height: 250px; 
+            object-fit: cover; 
+            border: 1px solid #ddd;
+            transition: transform 0.3s;
+        }
+        .gallery-item img:hover { transform: scale(1.03); }
+        .caption { margin-top: 10px; font-weight: bold; font-size: 0.9rem; }
+
+        /* --- LIGHTBOX --- */
+        #lightbox {
+            display: none; position: fixed; z-index: 10000;
+            left: 0; top: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.95);
+            flex-direction: column; justify-content: center; align-items: center; color: white;
+        }
+        #lightbox img { max-width: 90%; max-height: 75vh; border: 2px solid silver; cursor: pointer; }
+
+        /* --- UI ELEMENTS --- */
+        .contact-form input, .contact-form textarea { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ccc; font-family: inherit; }
+        .contact-form button { background-color: #cc0000; color: white; border: none; padding: 15px 30px; text-transform: uppercase; font-weight: bold; cursor: pointer; }
+        
+        #backToTop {
+            display: none; position: fixed; bottom: 30px; right: 30px; z-index: 99;
+            background-color: #cc0000; color: white; border: none; border-radius: 50%;
+            width: 50px; height: 50px; font-size: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        @media (max-width: 900px) {
+            #intro-title { font-size: 2.8rem; }
+            .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+            .split-layout { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <audio id="engine-sound" src="engine.mp3" preload="auto"></audio>
+
+    <div id="intro-overlay">
+        <div id="intro-title-container">
+            <h1 id="intro-title">Sarasota Caf&eacute; Racers</h1>
+            <div class="intro-subtitle">
+                <span>All Cars...</span><br>
+                <span class="indent-line">All the Time!</span>
+            </div>
+        </div>
+        <button id="start-btn" onclick="enterSite()">START</button>
+    </div>
+
+    <div id="lightbox" onclick="closeLightbox()">
+        <img id="lightbox-img" src="">
+        <div id="lightbox-caption" style="margin-top:15px; font-size: 1.2rem; font-weight: bold;"></div>
+        <div id="lightbox-instruction" style="margin-top:10px; text-decoration: underline; cursor: pointer; color: #aaa;">Click picture to return to gallery</div>
+    </div>
+
+    <button id="backToTop" onclick="scrollToTop()">↑</button>
+
+    <div id="main-site">
+        <header>
+            <div class="top-banner"></div>
+            <nav>
+                <button onclick="showPage('heritage')">Heritage</button>
+                <button onclick="showPage('drive')">What We Drive</button>
+                <button onclick="showPage('race')">What We Race</button>
+                <button onclick="showPage('news')">News</button>
+                <button onclick="showPage('community')">Community</button>
+                <button onclick="showPage('sponsors')">Sponsors</button>
+                <button onclick="showPage('faq')">FAQs</button>
+                <button onclick="showPage('links')">Links</button>
+                <button onclick="showPage('contact')">Contact Us</button>
+            </nav>
+        </header>
+
+        <div id="content-area">
+            
+            <section id="heritage" class="page-section active">
+                <h2>Our Heritage</h2>
+                <div class="split-layout">
+                    <div class="split-text">
+                        <p>The Sarasota Caf&eacute; Sarasota, the crown jewel of Florida’s “Cultural Coast,” is home to spectacular Gulf sunsets and the world’s finest, whitest powder sand beaches.
+						It is also home to the Sarasota Café Racers, America's premier car guy lunch and one of the most dynamic and diversified groups of auto aficionados anywhere.
+<br><br>It all started in 2003 when a handful of certifiable car crazies who owned a variety of pulse-quickening automobiles met one day for burgers and bench racing. Something clicked.
+ We exchanged irreverent banter, vied for bragging rights, bonded and unanimously agreed to do it again. And again. Our testosterone-infused collective grew and interest levels expanded,
+ attracting enthusiasts spanning the full spectrum of the hobby: classics, musclecars, hot rods, high-performance luxury cars, sports cars and exotics as well as vintage and contemporary
+ racecars.  Within a year our group had a name - Sarasota Café Racers – a  bi-weekly lunch schedule and a designated eatery. <br><br>The impetus to turn our motley crew into a slightly more formalized
+ entity came from a column I had read in the August 25, 2003 issue of AutoWeek. In ‘NOW AND THEN’ Denise McCluggage wrote about the “Tuesday Car Table,” at the Santa Fe Grill in Santa Fe, New Mexico.
+ “Tuesday Car table is not a club; it’s a fixed place and time and a floating assemblage of people who are keen on cars.”  Sarasota Café Racers developed into more than just a lunch group.
+ It morphed into a destination, where people who savor life in the fast lane and worship at the temple of torque could come together and break bread with citizens of the right lane. 
+ Knowing well the perils of growth and to preserve this unique  covenant, we attempted to keep the lowest possible profile. We “flew under the radar” until our cover was blown when word spread
+ to an editor at Sarasota magazine.</p>
+                    </div>
+                    <div class="split-image"><img src="heritage.jpg" alt="Heritage Image Placeholder"></div>
+                </div>
+            </section>
+
+            <section id="drive" class="page-section">
+                <h2>What We Drive</h2>
+                <div class="gallery-grid">
+                    <div class="gallery-item" onclick="openLightbox('car1-full.jpg', 'Member Car 1')">
+                        <img src="car1-thumb.jpg" alt="Car 1">
+                        <div class="caption">Member Car 1</div>
+                    </div>
+                    <div class="gallery-item" onclick="openLightbox('car2-full.jpg', 'Member Car 2')">
+                        <img src="car2-thumb.jpg" alt="Car 2">
+                        <div class="caption">Member Car 2</div>
+                    </div>
+					<div class="gallery-item" onclick="openLightbox('car3-full.jpg', 'Member Car 3')">
+                        <img src="car3-thumb.jpg" alt="Car 3">
+                        <div class="caption">Member Car 3</div>
+                    </div>
+                    <div class="gallery-item" onclick="openLightbox('car4-full.jpg', 'Member Car 4')">
+                        <img src="car4-thumb.jpg" alt="Car 4">
+                        <div class="caption">Member Car 4</div>
+                    </div>
+					<div class="gallery-item" onclick="openLightbox('car5-full.jpg', 'Member Car 5')">
+                        <img src="car5-thumb.jpg" alt="Car 5">
+                        <div class="caption">Member Car 5</div>
+                    </div>
+                    <div class="gallery-item" onclick="openLightbox('car6-full.jpg', 'Member Car 6')">
+                        <img src="car6-thumb.jpg" alt="Car 6">
+                        <div class="caption">Member Car 6</div>
+                    </div>
+					<div class="gallery-item" onclick="openLightbox('car7-full.jpg', 'Member Car 7')">
+                        <img src="car7-thumb.jpg" alt="Car 7">
+                        <div class="caption">Member Car 7</div>
+                    </div>
+                    <div class="gallery-item" onclick="openLightbox('car8-full.jpg', 'Member Car 8')">
+                        <img src="car8-thumb.jpg" alt="Car 8">
+                        <div class="caption">Member Car 8</div>
+                    </div>
+					<div class="gallery-item" onclick="openLightbox('car9-full.jpg', 'Member Car 9')">
+                        <img src="car9-thumb.jpg" alt="Car 9">
+                        <div class="caption">Member Car 9</div>
+                    </div>
+                    <div class="gallery-item" onclick="openLightbox('car10-full.jpg', 'Member Car 10')">
+                        <img src="car10-thumb.jpg" alt="Car 10">
+                        <div class="caption">Member Car 10</div>
+                    </div>
+					<div class="gallery-item" onclick="openLightbox('car11-full.jpg', 'Member Car 11')">
+                        <img src="car11-thumb.jpg" alt="Car 11">
+                        <div class="caption">Member Car 11</div>
+                    </div>
+                    <div class="gallery-item" onclick="openLightbox('car12-full.jpg', 'Member Car 12')">
+                        <img src="car12-thumb.jpg" alt="Car 12">
+                        <div class="caption">Member Car 12</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="race" class="page-section">
+                <h2>What We Race</h2>
+                <div class="gallery-grid">
+                    <div class="gallery-item" onclick="openLightbox('race1-full.jpg', 'Race Car 1')">
+                        <img src="race1-thumb.jpg" alt="Race 1">
+                        <div class="caption">Race Car 1</div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="news" class="page-section">
+                <h2>Club News</h2>
+                <div class="split-layout">
+                    <div class="split-text">
+                        <h3>Latest Club Updates</h3>
+                        <p>Stay informed about upcoming lunches, track days, and garage tours. [Insert news text here.]</p>
+                    </div>
+                    <div class="split-image"><img src="news1.jpg" alt="News Image Placeholder"></div>
+                </div>
+            </section>
+
+            <section id="community" class="page-section">
+                <h2>Community</h2>
+                <div class="split-layout">
+                    <div class="split-text">
+                        <h3>Our Local Impact</h3>
+                        <p>From local car shows to community charity events. [Insert community text here.]</p>
+                    </div>
+                    <div class="split-image"><img src="community1.jpg" alt="Community Image Placeholder"></div>
+                </div>
+            </section>
+
+            <section id="sponsors" class="page-section">
+                <h2>Sponsors</h2>
+                <div class="split-layout">
+                    <div class="split-text">
+                        <h3>Supporting Partners</h3>
+                        <p>We thank our generous sponsors for keeping the engines running. [Insert sponsor text here.]</p>
+                    </div>
+                    <div class="split-image"><img src="sponsor1.jpg" alt="Sponsor Image Placeholder"></div>
+                </div>
+            </section>
+
+            <section id="faq" class="page-section">
+                <h2>FAQs</h2>
+                <div class="split-layout">
+                    <div class="split-text">
+                        <p><strong>Who can join?</strong><br>Any enthusiast with a passion for driving.</p>
+                        <p><strong>When are the meets?</strong><br>We meet on a regular basis in the Sarasota area.</p>
+                    </div>
+                    <div class="split-image"><img src="faq.jpg" alt="FAQ Image Placeholder"></div>
+                </div>
+            </section>
+
+            <section id="links" class="page-section">
+                <h2>Links</h2>
+                <div class="split-layout">
+                    <div class="split-text">
+                        <h3>Useful Resources</h3>
+                        <ul>
+                            <li><a href="#">Track Day Schedule</a></li>
+                            <li><a href="#">Local Classic Car News</a></li>
+                            <li><a href="#">Recommended Service Shops</a></li>
+                        </ul>
+                    </div>
+                    <div class="split-image"><img src="links.jpg" alt="Links Image Placeholder"></div>
+                </div>
+            </section>
+
+            <section id="contact" class="page-section">
+                <h2>Contact Us</h2>
+                <div class="split-layout">
+                    <div class="split-text">
+                        <form class="contact-form" onsubmit="sendEmail(event)">
+                            <input type="text" id="name" placeholder="Your Name" required>
+                            <input type="email" id="email" placeholder="Your Email" required>
+                            <textarea id="message" rows="5" placeholder="How can we help?" required></textarea>
+                            <button type="submit">Send Message</button>
+                        </form>
+                    </div>
+                    <div class="split-image"><img src="contact-map.jpg" alt="Contact Image Placeholder"></div>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <script>
+        function enterSite() {
+            document.getElementById('engine-sound').play();
+            setTimeout(() => {
+                document.getElementById('intro-overlay').style.opacity = '0';
+                document.getElementById('main-site').style.display = 'block';
+                setTimeout(() => {
+                    document.getElementById('main-site').style.opacity = '1';
+                    document.getElementById('intro-overlay').style.display = 'none';
+                }, 1000);
+            }, 4000);
+        }
+
+        function showPage(p) {
+            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+            document.getElementById(p).classList.add('active');
+            window.scrollTo(0,0);
+        }
+
+        function openLightbox(s, c) {
+            document.getElementById('lightbox-img').src = s;
+            document.getElementById('lightbox-caption').innerText = c;
+            document.getElementById('lightbox').style.display = 'flex';
+        }
+
+        function closeLightbox() { document.getElementById('lightbox').style.display = 'none'; }
+
+        function scrollToTop() { window.scrollTo({top: 0, behavior: 'smooth'}); }
+
+        window.onscroll = function() {
+            let btn = document.getElementById("backToTop");
+            if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+                btn.style.display = "block";
+            } else {
+                btn.style.display = "none";
+            }
+        };
+
+        function sendEmail(e) {
+            e.preventDefault();
+            const name = document.getElementById('name').value;
+            const msg = document.getElementById('message').value;
+            window.location.href = `mailto:admin@sarasotacaferacers.com?subject=Inquiry from ${name}&body=${msg}`;
+        }
+    </script>
+</body>
+</html>
